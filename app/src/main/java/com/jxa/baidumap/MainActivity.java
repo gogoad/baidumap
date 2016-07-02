@@ -16,6 +16,7 @@ import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BitmapDescriptor;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
@@ -34,6 +35,12 @@ public class MainActivity extends AppCompatActivity {
     private Context context;
     private double mLatitude;
     private double mLongitude;
+
+    //自定义定位图标
+    BitmapDescriptor mCurrentMarker;
+    private MyLocationConfiguration.LocationMode mCurrentMode;
+    private static final int accuracyCircleFillColor = 0xAAFFFF88;
+    private static final int accuracyCircleStrokeColor = 0xAA00FF00;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
         option.setScanSpan(1000);
         mLocationClient.setLocOption(option);
         //mLocationClient.start();
+        mCurrentMarker = BitmapDescriptorFactory.fromResource(R.mipmap.navi_map_gps_locked);
     }
 
     private void initView() {
@@ -96,14 +104,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        // 退出时销毁定位
-        mLocationClient.stop();
-        // 关闭定位图层
+    protected void onStop() {
+        super.onStop();
+        // 关闭定位图层 退出时销毁定位
         baiduMap.setMyLocationEnabled(false);
+        mLocationClient.stop();
+        mMapView = null;
+    }
+
+    @Override
+    protected void onDestroy() {
         //在activity执行onDestroy时执行mMapView.onDestroy()，实现地图生命周期管理
         mMapView.onDestroy();
-        mMapView = null;
         super.onDestroy();
 
     }
@@ -162,18 +174,24 @@ public class MainActivity extends AppCompatActivity {
             }
             MyLocationData data = new MyLocationData.Builder()//
                     .accuracy(bdLocation.getRadius())//精度
-                    .direction(100).latitude(bdLocation.getLatitude())// 此处设置获取到的方向信息，顺时针0-360
+                    .latitude(bdLocation.getLatitude())// 此处设置获取到的方向信息，顺时针0-360
                     .longitude(bdLocation.getLongitude()).build();
+            baiduMap.setMyLocationData(data);
+           /* MyLocationConfiguration config = new MyLocationConfiguration(MyLocationConfiguration.LocationMode.NORMAL,
+                    true,mCurrentMarker);
+            baiduMap.setMyLocationConfigeration(config);*/
+            baiduMap.setMyLocationConfigeration(new MyLocationConfiguration(mCurrentMode, true,mCurrentMarker,
+                    accuracyCircleFillColor, accuracyCircleStrokeColor));
             mLatitude = bdLocation.getLatitude();
             mLongitude = bdLocation.getLongitude();
             if (isFirstLoc) {
-                isFirstLoc = false;
                 LatLng latLng = new LatLng(bdLocation.getLatitude(), bdLocation.getLongitude());
                 MapStatus.Builder builder = new MapStatus.Builder();
                 builder.target(latLng).zoom(18.0f);
                 baiduMap.animateMapStatus(MapStatusUpdateFactory.newMapStatus(builder.build()));
-               /* MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newLatLng(latLng);
+                /*MapStatusUpdate mapStatusUpdate = MapStatusUpdateFactory.newLatLng(latLng);
                 baiduMap.animateMapStatus(mapStatusUpdate);*/
+                isFirstLoc = false;
                 Toast.makeText(context, bdLocation.getAddrStr(), Toast.LENGTH_SHORT).show();
             }
         }
