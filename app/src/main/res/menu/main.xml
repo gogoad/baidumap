@@ -27,4 +27,19 @@
         android:showAsAction="never"
         android:title="我的位置"
         tools:ignore="AppCompatResource" />
+    <item
+        android:id="@+id/id_map_mode_common"
+        android:showAsAction="never"
+        android:title="普通模式"
+        tools:ignore="AppCompatResource" />
+    <item
+        android:id="@+id/id_map_mode_following"
+        android:showAsAction="never"
+        android:title="跟随模式"
+        tools:ignore="AppCompatResource" />
+    <item
+        android:id="@+id/id_map_mode_compass"
+        android:showAsAction="never"
+        android:title="罗盘模式"
+        tools:ignore="AppCompatResource" />
 </menu>

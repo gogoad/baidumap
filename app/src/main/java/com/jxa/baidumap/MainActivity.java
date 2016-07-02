@@ -35,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
     private Context context;
     private double mLatitude;
     private double mLongitude;
+    private MyOrientationListener myOrientationLisenter;
+    private float mCurrentX;
 
     //自定义定位图标
     BitmapDescriptor mCurrentMarker;
@@ -59,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initLocation() {
         //定位初始化
+        mCurrentMode = MyLocationConfiguration.LocationMode.NORMAL;
         mLocationClient = new LocationClient(this);
         mLocationListener = new MyLocationListener();
         mLocationClient.registerLocationListener(mLocationListener);
@@ -70,6 +73,13 @@ public class MainActivity extends AppCompatActivity {
         mLocationClient.setLocOption(option);
         //mLocationClient.start();
         mCurrentMarker = BitmapDescriptorFactory.fromResource(R.mipmap.navi_map_gps_locked);
+        myOrientationLisenter = new MyOrientationListener(context);
+        myOrientationLisenter.setOrientationLisenter(new MyOrientationListener.OnOrientationLisenter() {
+            @Override
+            public void onOrientationChange(float value) {
+                mCurrentX = value;
+            }
+        });
     }
 
     private void initView() {
@@ -93,7 +103,10 @@ public class MainActivity extends AppCompatActivity {
         baiduMap.setMyLocationEnabled(true);
         if (!mLocationClient.isStarted()) {
             mLocationClient.start();
+            //开启方向传感器
+            myOrientationLisenter.start();
         }
+
     }
 
     @Override
@@ -109,7 +122,8 @@ public class MainActivity extends AppCompatActivity {
         // 关闭定位图层 退出时销毁定位
         baiduMap.setMyLocationEnabled(false);
         mLocationClient.stop();
-        mMapView = null;
+        //mMapView = null;
+        myOrientationLisenter.stop();
     }
 
     @Override
@@ -151,6 +165,17 @@ public class MainActivity extends AppCompatActivity {
             case R.id.id_map_location:
                 location();
                 break;
+            case R.id.id_map_mode_common:
+                mCurrentMode = MyLocationConfiguration.LocationMode.NORMAL;
+                break;
+            case R.id.id_map_mode_following:
+                mCurrentMode = MyLocationConfiguration.LocationMode.FOLLOWING;
+                break;
+            case R.id.id_map_mode_compass:
+                mCurrentMode = MyLocationConfiguration.LocationMode.COMPASS;
+                break;
+
+
         }
         return super.onOptionsItemSelected(item);
     }
@@ -173,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             MyLocationData data = new MyLocationData.Builder()//
+                    .direction(mCurrentX)
                     .accuracy(bdLocation.getRadius())//精度
                     .latitude(bdLocation.getLatitude())// 此处设置获取到的方向信息，顺时针0-360
                     .longitude(bdLocation.getLongitude()).build();
@@ -180,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
            /* MyLocationConfiguration config = new MyLocationConfiguration(MyLocationConfiguration.LocationMode.NORMAL,
                     true,mCurrentMarker);
             baiduMap.setMyLocationConfigeration(config);*/
-            baiduMap.setMyLocationConfigeration(new MyLocationConfiguration(mCurrentMode, true,mCurrentMarker,
+            baiduMap.setMyLocationConfigeration(new MyLocationConfiguration(mCurrentMode, true, mCurrentMarker,
                     accuracyCircleFillColor, accuracyCircleStrokeColor));
             mLatitude = bdLocation.getLatitude();
             mLongitude = bdLocation.getLongitude();
