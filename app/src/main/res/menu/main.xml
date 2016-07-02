@@ -22,4 +22,9 @@
         android:showAsAction="never"
         android:title="城市热力图"
         tools:ignore="AppCompatResource" />
+    <item
+        android:id="@+id/id_map_location"
+        android:showAsAction="never"
+        android:title="我的位置"
+        tools:ignore="AppCompatResource" />
 </menu>
